@@ -232,6 +232,36 @@ func deleteCategoryByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func main(){
+	// Root endpoint
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Selamat datang di Kasir API",
+			"version": "1.0.0",
+			"endpoints": map[string]interface{}{
+				"health": "/health",
+				"products": map[string]string{
+					"list": "GET /api/produk",
+					"create": "POST /api/produk",
+					"detail": "GET /api/produk/{id}",
+					"update": "PUT /api/produk/{id}",
+					"delete": "DELETE /api/produk/{id}",
+				},
+				"categories": map[string]string{
+					"list": "GET /api/categories",
+					"create": "POST /api/categories",
+					"detail": "GET /api/categories/{id}",
+					"update": "PUT /api/categories/{id}",
+					"delete": "DELETE /api/categories/{id}",
+				},
+			},
+		})
+	})
+
 	// GET localhost:8080/api/produk/{id}
 	// PUT localhost:8080/api/produk/{id}
 	// DELETE localhost:8080/api/produk/{id}
