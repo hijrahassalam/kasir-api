@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"kasir-api/database"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,9 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	Port string `mapstructure:"PORT"`
-}
+
 
 type Produk struct {
 	ID int `json:"id"`
@@ -238,6 +238,11 @@ func deleteCategoryByID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type Config struct {
+	Port string `mapstructure:"PORT"`
+	DBConn string `mapstructure:"DB_CONN"`
+}
+
 func main(){
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -249,7 +254,15 @@ func main(){
 
 	config := Config{
  		Port: viper.GetString("PORT"),
+		DBConn: viper.GetString("DB_CONN"),
 	}
+
+	// Setup database
+	db, err := database.InitDB(config.DBConn)
+	if err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+	defer db.Close()
 
 	// Root endpoint
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -370,7 +383,7 @@ func main(){
 	addr := fmt.Sprintf(":%s", config.Port)
 	fmt.Println("Berhasil running server di port", config.Port)
 
-	err := http.ListenAndServe(addr, nil)
+	err = http.ListenAndServe(addr, nil)
 
 	if err != nil{
 		fmt.Println("Gagal memulai server:", err)
