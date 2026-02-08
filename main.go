@@ -111,6 +111,12 @@ func main(){
 	http.HandleFunc("/api/report/hari-ini", transactionHandler.HandleSalesReport) // GET
 	http.HandleFunc("/api/report", transactionHandler.HandleReportByDateRange) // GET with date range
 
+	// Serve Swagger documentation
+	http.HandleFunc("/docs/swagger.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "docs/swagger.json")
+	})
+
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
