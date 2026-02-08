@@ -94,11 +94,12 @@ func main(){
 	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
 
 	// Transaction
-transactionRepo := repositories.NewTransactionRepository(db)
-transactionService := services.NewTransactionService(transactionRepo)
-transactionHandler := handlers.NewTransactionHandler(transactionService)
+	transactionRepo := repositories.NewTransactionRepository(db)
+	transactionService := services.NewTransactionService(transactionRepo)
+	transactionHandler := handlers.NewTransactionHandler(transactionService)
 
-http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout) // POST
+	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout) // POST
+	http.HandleFunc("/api/report/hari-ini", transactionHandler.HandleSalesReport) // GET
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

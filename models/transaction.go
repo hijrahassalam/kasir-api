@@ -26,3 +26,15 @@ type CheckoutItem struct {
 type CheckoutRequest struct {
 	Items   []CheckoutItem `json:"items"`
 }
+
+// Sales Report Models
+type SalesSummary struct {
+	TotalRevenue   int            `json:"total_revenue"`
+	TotalTransaksi int            `json:"total_transaksi"`
+	ProdukTerlaris *BestSeller    `json:"produk_terlaris"`
+}
+
+type BestSeller struct {
+	Nama       string `json:"nama"`
+	QtyTerjual int    `json:"qty_terjual"`
+}

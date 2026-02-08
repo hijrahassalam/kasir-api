@@ -43,3 +43,24 @@ func (h *TransactionHandler) Checkout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(transaction)
 }
+
+// HandleSalesReport - GET /api/report/hari-ini
+func (h *TransactionHandler) HandleSalesReport(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		h.GetSalesSummaryToday(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *TransactionHandler) GetSalesSummaryToday(w http.ResponseWriter, r *http.Request) {
+	summary, err := h.service.GetSalesSummaryToday()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(summary)
+}

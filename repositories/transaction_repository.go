@@ -78,3 +78,41 @@ func (repo *TransactionRepository) CreateTransaction(items []models.CheckoutItem
 		Details:     details,
 	}, nil
 }
+
+// GetSalesSummaryToday - mendapatkan ringkasan penjualan hari ini
+func (repo *TransactionRepository) GetSalesSummaryToday() (*models.SalesSummary, error) {
+	summary := &models.SalesSummary{}
+
+	// Get total revenue dan total transaksi hari ini
+	err := repo.db.QueryRow(`
+		SELECT COALESCE(SUM(total_amount), 0), COUNT(*) 
+		FROM transactions 
+		WHERE DATE(created_at) = CURRENT_DATE
+	`).Scan(&summary.TotalRevenue, &summary.TotalTransaksi)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get produk terlaris hari ini
+	var bestSeller models.BestSeller
+	err = repo.db.QueryRow(`
+		SELECT p.name, COALESCE(SUM(td.quantity), 0) as qty_terjual
+		FROM transaction_details td
+		JOIN transactions t ON td.transaction_id = t.id
+		JOIN products p ON td.product_id = p.id
+		WHERE DATE(t.created_at) = CURRENT_DATE
+		GROUP BY p.id, p.name
+		ORDER BY qty_terjual DESC
+		LIMIT 1
+	`).Scan(&bestSeller.Nama, &bestSeller.QtyTerjual)
+	
+	if err == sql.ErrNoRows {
+		summary.ProdukTerlaris = nil
+	} else if err != nil {
+		return nil, err
+	} else {
+		summary.ProdukTerlaris = &bestSeller
+	}
+
+	return summary, nil
+}
