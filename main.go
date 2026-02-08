@@ -51,7 +51,7 @@ func main(){
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"message": "Selamat datang di Kasir API",
 			"version": "1.0.0",
-			"documentation": "/docs/swagger.json",
+			"documentation": "/docs",
 			"endpoints": map[string]interface{}{
 				"health": "/health",
 				"products": map[string]string{
@@ -111,7 +111,10 @@ func main(){
 	http.HandleFunc("/api/report/hari-ini", transactionHandler.HandleSalesReport) // GET
 	http.HandleFunc("/api/report", transactionHandler.HandleReportByDateRange) // GET with date range
 
-	// Serve Swagger documentation
+	// Serve Swagger UI documentation
+	http.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "docs/index.html")
+	})
 	http.HandleFunc("/docs/swagger.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		http.ServeFile(w, r, "docs/swagger.json")
