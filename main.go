@@ -51,21 +51,30 @@ func main(){
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"message": "Selamat datang di Kasir API",
 			"version": "1.0.0",
+			"documentation": "/docs/swagger.json",
 			"endpoints": map[string]interface{}{
 				"health": "/health",
 				"products": map[string]string{
-					"list": "GET /api/produk",
+					"list":   "GET /api/produk",
+					"search": "GET /api/produk?name={keyword}",
 					"create": "POST /api/produk",
 					"detail": "GET /api/produk/{id}",
 					"update": "PUT /api/produk/{id}",
 					"delete": "DELETE /api/produk/{id}",
 				},
 				"categories": map[string]string{
-					"list": "GET /api/categories",
+					"list":   "GET /api/categories",
 					"create": "POST /api/categories",
 					"detail": "GET /api/categories/{id}",
 					"update": "PUT /api/categories/{id}",
 					"delete": "DELETE /api/categories/{id}",
+				},
+				"transactions": map[string]string{
+					"checkout": "POST /api/checkout",
+				},
+				"reports": map[string]string{
+					"today":      "GET /api/report/hari-ini",
+					"date_range": "GET /api/report?start_date={YYYY-MM-DD}&end_date={YYYY-MM-DD}",
 				},
 			},
 		})

@@ -12,35 +12,43 @@ This is a personal learning project to explore and demonstrate proficiency in:
 - Implementing Layered Architecture (Handler → Service → Repository)
 - PostgreSQL database integration
 - Environment-based configuration management
+- Transaction processing & sales reporting
 
 ## 🏗️ Project Structure
 
 ```
 kasir-api/
-├── main.go                 # Application entry point
+├── main.go                          # Application entry point
 ├── database/
-│   └── database.go         # Database connection setup
+│   └── database.go                  # Database connection setup
 ├── models/
-│   ├── product.go          # Product model
-│   └── category.go         # Category model
+│   ├── product.go                   # Product model
+│   ├── category.go                  # Category model
+│   └── transaction.go               # Transaction & report models
 ├── repositories/
-│   ├── product_repository.go   # Product data access layer
-│   └── category_repository.go  # Category data access layer
+│   ├── product_repository.go        # Product data access layer
+│   ├── category_repository.go       # Category data access layer
+│   └── transaction_repository.go    # Transaction data access layer
 ├── services/
-│   ├── product_service.go      # Product business logic
-│   └── category_service.go     # Category business logic
+│   ├── product_service.go           # Product business logic
+│   ├── category_service.go          # Category business logic
+│   └── transaction_service.go       # Transaction business logic
 ├── handlers/
-│   ├── product_handler.go      # Product HTTP handlers
-│   └── category_handler.go     # Category HTTP handlers
+│   ├── product_handler.go           # Product HTTP handlers
+│   ├── category_handler.go          # Category HTTP handlers
+│   └── transaction_handler.go       # Transaction HTTP handlers
+├── docs/
+│   └── swagger.json                 # OpenAPI 3.0 Swagger documentation
 ├── go.mod
 ├── go.sum
-└── .env                    # Environment variables
+└── .env                             # Environment variables
 ```
 
 ## 🛠️ Tech Stack
 
 - **Go** 1.24
 - **PostgreSQL** - Relational database
+- **pgx** - PostgreSQL driver for Go
 - **Viper** - Configuration management
 - **net/http** - HTTP server (Go standard library)
 
@@ -77,6 +85,23 @@ CREATE TABLE category (
     name VARCHAR(255) NOT NULL,
     description TEXT
 );
+
+-- Transaction table
+CREATE TABLE transaction (
+    id SERIAL PRIMARY KEY,
+    total_amount INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Transaction detail table
+CREATE TABLE transaction_detail (
+    id SERIAL PRIMARY KEY,
+    transaction_id INTEGER REFERENCES transaction(id),
+    product_id INTEGER REFERENCES product(id),
+    product_name VARCHAR(255),
+    quantity INTEGER NOT NULL,
+    subtotal INTEGER NOT NULL
+);
 ```
 
 ## 🚀 Getting Started
@@ -100,13 +125,14 @@ The server will start at `http://localhost:8080`
 ### General
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/` | API information |
+| GET | `/` | API information & endpoint list |
 | GET | `/health` | Health check |
 
 ### Products
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/produk` | Get all products |
+| GET | `/api/produk?name={keyword}` | Search products by name |
 | POST | `/api/produk` | Create a new product |
 | GET | `/api/produk/{id}` | Get product by ID |
 | PUT | `/api/produk/{id}` | Update product |
@@ -121,13 +147,32 @@ The server will start at `http://localhost:8080`
 | PUT | `/api/categories/{id}` | Update category |
 | DELETE | `/api/categories/{id}` | Delete category |
 
+### Transactions
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/checkout` | Process checkout (multiple items) |
+
+### Reports
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/report/hari-ini` | Today's sales summary |
+| GET | `/api/report?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD` | Sales report by date range |
+
+## 📖 API Documentation (Swagger)
+
+Full OpenAPI 3.0 documentation is available at [`docs/swagger.json`](docs/swagger.json).
+
+You can view it interactively using:
+- [Swagger Editor](https://editor.swagger.io/) — paste or import the JSON file
+- [Swagger UI](https://petstore.swagger.io/) — point to the raw URL of your `swagger.json`
+
 ## 📝 Example Requests
 
 ### Create Product
 ```bash
 curl -X POST http://localhost:8080/api/produk \
   -H "Content-Type: application/json" \
-  -d '{"name": "Fried Rice", "price": 15000, "stock": 100}'
+  -d '{"name": "Nasi Goreng", "price": 15000, "stock": 100}'
 ```
 
 ### Get All Products
@@ -135,16 +180,38 @@ curl -X POST http://localhost:8080/api/produk \
 curl http://localhost:8080/api/produk
 ```
 
+### Search Products by Name
+```bash
+curl "http://localhost:8080/api/produk?name=nasi"
+```
+
 ### Create Category
 ```bash
 curl -X POST http://localhost:8080/api/categories \
   -H "Content-Type: application/json" \
-  -d '{"name": "Food", "description": "Food products category"}'
+  -d '{"name": "Makanan", "description": "Kategori produk makanan"}'
 ```
 
 ### Get All Categories
 ```bash
 curl http://localhost:8080/api/categories
+```
+
+### Checkout (Create Transaction)
+```bash
+curl -X POST http://localhost:8080/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"items": [{"product_id": 1, "quantity": 2}, {"product_id": 2, "quantity": 1}]}'
+```
+
+### Today's Sales Report
+```bash
+curl http://localhost:8080/api/report/hari-ini
+```
+
+### Sales Report by Date Range
+```bash
+curl "http://localhost:8080/api/report?start_date=2026-01-01&end_date=2026-02-08"
 ```
 
 ## 📚 Architecture
@@ -178,20 +245,29 @@ This project follows the Layered Architecture pattern:
 - [x] Basic CRUD for Products
 - [x] Basic CRUD for Categories
 - [x] Layered Architecture implementation
+- [x] Transaction / Checkout system
+- [x] Sales report (today & date range)
+- [x] Product search by name
+- [x] API documentation (Swagger / OpenAPI 3.0)
 - [ ] Input validation
 - [ ] Error handling middleware
 - [ ] Authentication & Authorization
 - [ ] Unit tests
-- [ ] API documentation (Swagger)
 - [ ] Docker support
 - [ ] CI/CD pipeline
+
+## 🌐 Live Demo
+
+Production API: [https://kasir-api-production-ecd5.up.railway.app](https://kasir-api-production-ecd5.up.railway.app)
 
 ## 📖 Key Learnings
 
 - Using Go's standard `net/http` library without external frameworks
 - Manual dependency injection pattern (Repository → Service → Handler)
 - Configuration management with Viper for `.env` and environment variables
-- PostgreSQL integration with `lib/pq` driver
+- PostgreSQL integration with `pgx` driver
+- Transaction processing with stock management
+- Sales reporting with date filtering
 
 ## 📄 License
 
