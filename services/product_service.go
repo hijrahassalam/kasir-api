@@ -17,6 +17,10 @@ func (s *ProductService) GetAll() ([]models.Product, error) {
 	return s.repo.GetAll()
 }
 
+func (s *ProductService) SearchByName(name string) ([]models.Product, error) {
+	return s.repo.SearchByName(name)
+}
+
 func (s *ProductService) Create(data *models.Product) error {
 	return s.repo.Create(data)
 }
