@@ -116,3 +116,41 @@ func (repo *TransactionRepository) GetSalesSummaryToday() (*models.SalesSummary,
 
 	return summary, nil
 }
+
+// GetSalesSummaryByDateRange - mendapatkan ringkasan penjualan berdasarkan rentang tanggal
+func (repo *TransactionRepository) GetSalesSummaryByDateRange(startDate, endDate string) (*models.SalesSummary, error) {
+	summary := &models.SalesSummary{}
+
+	// Get total revenue dan total transaksi dalam rentang tanggal
+	err := repo.db.QueryRow(`
+		SELECT COALESCE(SUM(total_amount), 0), COUNT(*) 
+		FROM transactions 
+		WHERE DATE(created_at) >= $1 AND DATE(created_at) <= $2
+	`, startDate, endDate).Scan(&summary.TotalRevenue, &summary.TotalTransaksi)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get produk terlaris dalam rentang tanggal
+	var bestSeller models.BestSeller
+	err = repo.db.QueryRow(`
+		SELECT p.name, COALESCE(SUM(td.quantity), 0) as qty_terjual
+		FROM transaction_details td
+		JOIN transactions t ON td.transaction_id = t.id
+		JOIN products p ON td.product_id = p.id
+		WHERE DATE(t.created_at) >= $1 AND DATE(t.created_at) <= $2
+		GROUP BY p.id, p.name
+		ORDER BY qty_terjual DESC
+		LIMIT 1
+	`, startDate, endDate).Scan(&bestSeller.Nama, &bestSeller.QtyTerjual)
+	
+	if err == sql.ErrNoRows {
+		summary.ProdukTerlaris = nil
+	} else if err != nil {
+		return nil, err
+	} else {
+		summary.ProdukTerlaris = &bestSeller
+	}
+
+	return summary, nil
+}

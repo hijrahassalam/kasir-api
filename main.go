@@ -100,6 +100,7 @@ func main(){
 
 	http.HandleFunc("/api/checkout", transactionHandler.HandleCheckout) // POST
 	http.HandleFunc("/api/report/hari-ini", transactionHandler.HandleSalesReport) // GET
+	http.HandleFunc("/api/report", transactionHandler.HandleReportByDateRange) // GET with date range
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

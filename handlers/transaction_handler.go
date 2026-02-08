@@ -64,3 +64,28 @@ func (h *TransactionHandler) GetSalesSummaryToday(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(summary)
 }
+
+// HandleReportByDateRange - GET /api/report?start_date=2026-01-01&end_date=2026-02-01
+func (h *TransactionHandler) HandleReportByDateRange(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	startDate := r.URL.Query().Get("start_date")
+	endDate := r.URL.Query().Get("end_date")
+
+	if startDate == "" || endDate == "" {
+		http.Error(w, "start_date and end_date are required", http.StatusBadRequest)
+		return
+	}
+
+	summary, err := h.service.GetSalesSummaryByDateRange(startDate, endDate)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(summary)
+}
